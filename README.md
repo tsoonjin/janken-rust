@@ -107,3 +107,15 @@ This project is implemented in Rust. For detailed technical documentation and se
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Running the Game Locally with Docker Compose
+
+To run the Jankenryusagi game locally using Docker Compose, follow these steps:
+
+1. **Install Docker and Docker Compose:**
+   - Ensure Docker and Docker Compose are installed on your system. You can download them from [Docker's official website](https://www.docker.com/products/docker-desktop).
+
+2. **Clone the Repository:**
+   - Open a terminal and run the following command to clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/jankenryusagi.git

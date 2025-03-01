@@ -25,6 +25,7 @@ This document outlines the technical architecture and implementation guidelines 
 services:
   frontend:
     # Frontend service container
+    build: ./frontend
     ports:
       - "3000:3000"
     depends_on:
@@ -32,6 +33,7 @@ services:
 
   backend:
     # Backend service container
+    build: ./backend
     ports:
       - "8080:8080"
     depends_on:
