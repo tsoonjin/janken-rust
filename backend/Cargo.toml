@@ -1,0 +1,23 @@
+[package]
+name = "backend"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+shared = { path = "../shared" }
+actix-web = "4.3"
+actix-ws = "0.2"
+actix-rt = "2.8"
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+futures = { workspace = true }
+sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "uuid", "chrono", "json"] }
+thiserror = { workspace = true }
+dotenv = "0.15"
+env_logger = "0.10"
