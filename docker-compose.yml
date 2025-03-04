@@ -1,36 +1,55 @@
-version: "3.8"
-
+version: '3.8'
 services:
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-
-  backend:
-    build: ./backend
-    ports:
-      - "8080:8080"
-    environment:
-      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@db:5432/jankenryusagi
-    depends_on:
-      db:
-        condition: service_healthy
-
   db:
-    image: postgres:latest
+    image: postgres:15
     environment:
-      POSTGRES_DB: jankenryusagi
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: janken
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d jankenryusagi"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    command: postgres -c max_connections=100 -c shared_buffers=256MB
+
+  backend:
+    build: 
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/janken
+    tmpfs:
+      - /tmp:exec,size=4G
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 2G
 
 volumes:
   postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/postgres-data

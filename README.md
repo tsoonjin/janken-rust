@@ -108,9 +108,16 @@ This project is implemented in Rust. For detailed technical documentation and se
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Running the Game Locally with Docker Compose
+## Getting Started
 
-To run the Jankenryusagi game locally using Docker Compose, follow these steps:
+### Running with Docker Compose
+
+1. **Set Environment Variables:**
+   - Create a `.env` file in the project root with the following content:
+   ```plaintext
+   DB_USER=postgres
+   DB_PASSWORD=your_password
+```
 
 1. **Install Docker and Docker Compose:**
    - Ensure Docker and Docker Compose are installed on your system. You can download them from [Docker's official website](https://www.docker.com/products/docker-desktop).
@@ -118,8 +125,15 @@ To run the Jankenryusagi game locally using Docker Compose, follow these steps:
 2. **Clone the Repository:**
    - Open a terminal and run the following command to clone the repository:
    ```bash
-   git clone https://github.com/yourusername/jankenryusagi.git
+   git clone https://github.com/tsoonjin/jankenryusagi.git
 ```
+3. **Running docker-compose**
+```
+docker-compose up --build` to build and start all services
+docker-compose down` to stop and remove all containers
+```
+
+These commands should be run from the project root directory where the `docker-compose.yml` file is located.
 
 ## Frontend Features
 

@@ -4,11 +4,14 @@ use chrono::{DateTime, Utc};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum GamePhase {
+    Waiting,
     ClassSelection,
     CardSelection,
     AbilityUsage,
     Resolution,
     Tiebreaker,
+    Playing,
+    Finished,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
@@ -39,6 +42,21 @@ pub enum CharacterClass {
     Swordmaster,
     Gunslinger,
     Trickster,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Action {
+    SelectClass(CharacterClass),
+    PlayCard(Card),
+    UseAbility(String),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub enum RoomStatus {
+    Waiting,
+    InProgress,
+    Completed,
+    Paused,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -74,7 +92,7 @@ pub enum ClientMessage {
     },
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PlayerState {
     pub player_id: Uuid,
     pub username: String,
@@ -91,24 +109,36 @@ pub enum PlayerStatus {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct GameState {
+    pub room_id: Uuid,
+    pub players: Vec<Player>,
+    pub phase: GamePhase,
+}
+
+impl Default for GameState {
+    fn default() -> Self {
+        Self {
+            room_id: Uuid::new_v4(),
+            players: Vec::new(),
+            phase: GamePhase::ClassSelection,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Player {
+    pub id: Uuid,
+    pub username: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub enum ServerMessage {
     RoomStatus {
         room_id: Uuid,
         status: RoomStatus,
         players: Vec<PlayerState>,
     },
-    GameState {
-        room_id: Uuid,
-        round_number: i32,
-        phase: GamePhase,
-        players: Vec<PlayerState>,
-        timer: i32,
-    },
-    RoundResult {
-        room_id: Uuid,
-        round_number: i32,
-        results: Vec<PlayerRoundResult>,
-    },
+    GameState(GameState),
     Error {
         code: String,
         message: String,
@@ -116,12 +146,16 @@ pub enum ServerMessage {
     },
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub enum RoomStatus {
-    Waiting,
-    InProgress,
-    Completed,
-    Paused,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RoundResult {
+    pub winner_id: Option<Uuid>,
+    pub player_actions: Vec<PlayerAction>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlayerAction {
+    pub player_id: Uuid,
+    pub action: Action,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

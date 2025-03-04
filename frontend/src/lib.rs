@@ -11,22 +11,38 @@ mod websocket;
 
 use components::{landing_page::LandingPage, leaderboard::Leaderboard, player_details::PlayerDetails};
 
+#[derive(Clone, PartialEq)]
+enum Route {
+    Landing,
+    Leaderboard,
+    PlayerDetails(String),
+}
+
 #[function_component(App)]
 pub fn app() -> Html {
     let current_route = use_state(|| Route::Landing);
+    
+    let switch_to_landing = {
+        let current_route = current_route.clone();
+        Callback::from(move |_| current_route.set(Route::Landing))
+    };
+    
+    let switch_to_leaderboard = {
+        let current_route = current_route.clone();
+        Callback::from(move |_| current_route.set(Route::Leaderboard))
+    };
 
     html! {
         <div class="app-container">
             <nav>
-                <button onclick={/* switch to landing */}>{"Rooms"}</button>
-                <button onclick={/* switch to leaderboard */}>{"Leaderboard"}</button>
+                <button onclick={switch_to_landing}>{"Rooms"}</button>
+                <button onclick={switch_to_leaderboard}>{"Leaderboard"}</button>
             </nav>
             {
-                match *current_route {
+                match (*current_route).clone() {
                     Route::Landing => html! { <LandingPage /> },
                     Route::Leaderboard => html! { <Leaderboard /> },
-                    Route::PlayerDetails(id) => html! { <PlayerDetails player_id={id} /> },
-                    Route::Game => html! { /* existing game component */ },
+                    Route::PlayerDetails(_id) => html! { <PlayerDetails /> },
                 }
             }
         </div>

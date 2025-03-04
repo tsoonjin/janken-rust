@@ -1,20 +1,19 @@
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_ws::Message;
-use futures::{StreamExt, TryStreamExt};
+use futures::StreamExt;
+use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgPoolOptions;
-use std::sync::Arc;
-use tokio::sync::Mutex;
-use tracing::{info, warn};
+use std::sync::{Arc, Mutex};
+use tracing::info;
 use uuid::Uuid;
 
 mod game;
 mod handlers;
 mod state;
 
-#[derive(Debug)]
-struct AppState {
-    db: sqlx::PgPool,
+pub struct AppState {
     game_state: Arc<Mutex<state::GameState>>,
+    db_pool: sqlx::PgPool,
 }
 
 async fn ws_handler(
@@ -22,9 +21,10 @@ async fn ws_handler(
     stream: web::Payload,
     app_state: web::Data<AppState>,
 ) -> Result<HttpResponse, Error> {
-    let (response, mut session, mut msg_stream) = actix_ws::handle(&req, stream)?
+    let (response, mut session, mut msg_stream) = actix_ws::handle(&req, stream)?;
 
     let state = app_state.clone();
+    
     actix_web::rt::spawn(async move {
         while let Some(Ok(msg)) = msg_stream.next().await {
             match msg {
@@ -33,11 +33,8 @@ async fn ws_handler(
                         handlers::handle_client_message(client_msg, &state, &mut session).await;
                     }
                 }
-                Message::Close(reason) => {
-                    info!("Client disconnected: {:?}", reason);
-                    break;
-                }
-                _ => continue,
+                Message::Close(_) => break,
+                _ => {}
             }
         }
     });
@@ -45,17 +42,71 @@ async fn ws_handler(
     Ok(response)
 }
 
-// Add new routes
+#[derive(serde::Serialize)]
+struct Room {
+    id: Uuid,
+    name: String,
+    player_count: i32,
+}
+
 async fn get_rooms() -> Result<HttpResponse, Error> {
-    // Implementation for getting rooms list
+    Ok(HttpResponse::Ok().json(Vec::<Room>::new()))
 }
 
-async fn get_leaderboard(query: web::Query<LeaderboardQuery>) -> Result<HttpResponse, Error> {
-    // Implementation for getting leaderboard with pagination
+#[derive(Debug, Deserialize)]
+pub struct LeaderboardQuery {
+    page: Option<i32>,
+    limit: Option<i32>,
 }
 
-async fn get_player_details(player_id: web::Path<Uuid>) -> Result<HttpResponse, Error> {
-    // Implementation for getting player details
+#[derive(Debug, Serialize)]
+struct LeaderboardEntry {
+    player_id: Uuid,
+    username: String,
+    wins: i32,
+    losses: i32,
+    draws: i32,
+    matches: i32,
+}
+
+async fn get_leaderboard(
+    app_state: web::Data<AppState>,
+    query: web::Query<LeaderboardQuery>,
+) -> Result<HttpResponse, Error> {
+    let page = query.page.unwrap_or(1);
+    let limit = query.limit.unwrap_or(10);
+    
+    // Temporary empty response
+    let entries: Vec<LeaderboardEntry> = Vec::new();
+    Ok(HttpResponse::Ok().json(entries))
+}
+
+#[derive(serde::Serialize)]
+struct PlayerDetails {
+    id: Uuid,
+    username: String,
+    stats: PlayerStats,
+}
+
+#[derive(serde::Serialize)]
+struct PlayerStats {
+    wins: i32,
+    losses: i32,
+    draws: i32,
+    matches: i32,
+}
+
+async fn get_player_details(_player_id: web::Path<Uuid>) -> Result<HttpResponse, Error> {
+    Ok(HttpResponse::Ok().json(PlayerDetails {
+        id: Uuid::new_v4(),
+        username: String::new(),
+        stats: PlayerStats {
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            matches: 0,
+        },
+    }))
 }
 
 #[actix_web::main]
@@ -63,8 +114,7 @@ async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
     env_logger::init();
 
-    let database_url = std::env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     let pool = PgPoolOptions::new()
         .max_connections(5)
@@ -72,15 +122,9 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to create pool");
 
-    // Run migrations
-    sqlx::migrate!("./migrations")
-        .run(&pool)
-        .await
-        .expect("Failed to migrate database");
-
     let app_state = web::Data::new(AppState {
-        db: pool,
         game_state: Arc::new(Mutex::new(state::GameState::new())),
+        db_pool: pool,
     });
 
     HttpServer::new(move || {
