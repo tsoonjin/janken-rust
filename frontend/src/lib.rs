@@ -9,40 +9,25 @@ mod components;
 mod game_state;
 mod websocket;
 
+use components::{landing_page::LandingPage, leaderboard::Leaderboard, player_details::PlayerDetails};
+
 #[function_component(App)]
 pub fn app() -> Html {
-    let ws = use_state(|| None::<WebSocket>);
-    let game_state = use_state(|| game_state::GameState::new());
-    let player_id = use_state(|| Uuid::new_v4());
-
-    let onclick = {
-        let ws = ws.clone();
-        let player_id = player_id.clone();
-        Callback::from(move |_| {
-            if ws.is_none() {
-                let socket = WebSocket::new("ws://localhost:8080/ws").unwrap();
-                let msg = ClientMessage::CreateRoom {
-                    player_id: *player_id,
-                };
-                websocket::send_message(&socket, msg);
-                ws.set(Some(socket));
-            }
-        })
-    };
+    let current_route = use_state(|| Route::Landing);
 
     html! {
-        <div class="game-container">
-            <h1>{"Jankenryusagi"}</h1>
-            if ws.is_none() {
-                <button {onclick}>{"Create Game Room"}</button>
-            } else {
-                <div class="game-board">
-                    <components::GameBoard
-                        game_state={(*game_state).clone()}
-                        player_id={*player_id}
-                        ws={(*ws).clone().unwrap()}
-                    />
-                </div>
+        <div class="app-container">
+            <nav>
+                <button onclick={/* switch to landing */}>{"Rooms"}</button>
+                <button onclick={/* switch to leaderboard */}>{"Leaderboard"}</button>
+            </nav>
+            {
+                match *current_route {
+                    Route::Landing => html! { <LandingPage /> },
+                    Route::Leaderboard => html! { <Leaderboard /> },
+                    Route::PlayerDetails(id) => html! { <PlayerDetails player_id={id} /> },
+                    Route::Game => html! { /* existing game component */ },
+                }
             }
         </div>
     }

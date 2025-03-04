@@ -347,3 +347,22 @@ interface Ability {
    - Monitor WebSocket connection health
    - Track game metrics (rounds played, disconnects, etc.)
    - Implement error tracking and reporting
+
+
+## Frontend Features
+
+The frontend of the Jankenryusagi game includes the following features:
+
+1. **Landing Page:**
+   - Displays a list of available game rooms.
+   - Provides an input field to create a new room with a unique name. If the name already exists, the user is prompted to choose another one.
+   - The input field can also be used to search for existing rooms. If a room doesn't exist, the button changes from "Join" to "Create".
+
+2. **Leaderboard:**
+   - Accessible via a tab on the landing page.
+   - Displays an infinite scrolling list of players with their win, draw, loss, and match statistics.
+
+3. **Player Detail Page:**
+   - Displays detailed information about a player.
+   - Includes a history of matches sorted by the latest first.
+   - Provides a tab for head-to-head records with other players.

@@ -119,3 +119,18 @@ To run the Jankenryusagi game locally using Docker Compose, follow these steps:
    - Open a terminal and run the following command to clone the repository:
    ```bash
    git clone https://github.com/yourusername/jankenryusagi.git
+```
+
+## Frontend Features
+
+The Jankenryusagi game includes the following frontend features:
+
+- **Landing Page:**
+  - Shows a list of game rooms and allows users to create a new room with a unique name.
+  - Provides a search functionality for existing rooms. If a room doesn't exist, the button changes from "Join" to "Create".
+
+- **Leaderboard:**
+  - Displays an infinite scrolling list of players with their win, draw, loss, and match statistics.
+
+- **Player Detail Page:**
+  - Shows detailed player information, including match history and head-to-head records with other players.

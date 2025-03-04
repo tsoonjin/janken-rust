@@ -45,6 +45,19 @@ async fn ws_handler(
     Ok(response)
 }
 
+// Add new routes
+async fn get_rooms() -> Result<HttpResponse, Error> {
+    // Implementation for getting rooms list
+}
+
+async fn get_leaderboard(query: web::Query<LeaderboardQuery>) -> Result<HttpResponse, Error> {
+    // Implementation for getting leaderboard with pagination
+}
+
+async fn get_player_details(player_id: web::Path<Uuid>) -> Result<HttpResponse, Error> {
+    // Implementation for getting player details
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
@@ -74,6 +87,9 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(app_state.clone())
             .route("/ws", web::get().to(ws_handler))
+            .route("/api/rooms", web::get().to(get_rooms))
+            .route("/api/leaderboard", web::get().to(get_leaderboard))
+            .route("/api/players/{id}", web::get().to(get_player_details))
     })
     .bind("0.0.0.0:8080")?
     .run()
